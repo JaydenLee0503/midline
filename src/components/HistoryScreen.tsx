@@ -33,7 +33,8 @@ export interface HistoryScreenProps {
 }
 
 const SERIES_COLOR = 'var(--color-chart)';
-const AXIS_COLOR = 'var(--color-line)';
+const GRID_COLOR = 'var(--color-grid)';
+const AXIS_COLOR = 'var(--color-ink-soft)';
 const INK_SOFT = 'var(--color-ink-soft)';
 
 function shortDate(time: number): string {
@@ -49,7 +50,7 @@ function ChartTooltip({ active, payload }: TooltipPayload) {
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;
   return (
-    <div className="rounded-xl border border-line bg-surface px-4 py-2 text-lg shadow-md">
+    <div className="border border-line bg-surface px-4 py-2 text-lg shadow-md">
       <p className="font-semibold">{formatSessionDate(new Date(row.t).toISOString())}</p>
       <p className="tabular-nums text-ink-soft">
         {row.score === null ? 'not measured' : `${row.score} / 100`}
@@ -115,7 +116,7 @@ export default function HistoryScreen({
               type="button"
               onClick={() => setSeriesKey(choice.key)}
               aria-pressed={selected}
-              className={`min-h-12 rounded-2xl border-2 px-5 text-lg font-semibold transition-colors ${
+              className={`min-h-12 border-2 px-5 text-lg font-semibold transition-colors ${
                 selected
                   ? 'border-brand bg-brand text-white'
                   : 'border-line bg-surface text-ink hover:border-brand'
@@ -142,7 +143,7 @@ export default function HistoryScreen({
           <div className="mt-6 h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={{ top: 8, right: 24, bottom: 4, left: 0 }}>
-                <CartesianGrid stroke={AXIS_COLOR} vertical={false} />
+                <CartesianGrid stroke={GRID_COLOR} vertical={false} />
                 <XAxis
                   dataKey="t"
                   type="number"

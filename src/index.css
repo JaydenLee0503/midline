@@ -1,39 +1,60 @@
 @import 'tailwindcss';
 
-/* Calm, high-contrast palette. Left/right use blue vs amber, which stays
-   distinguishable for the common forms of colour blindness; status colours are
-   always paired with words, never used on their own. */
+/**
+ * Flat, illustrated and square-edged: painted outdoor scenes, thick ink
+ * outlines, hard offset shadows like stickers on a page, and no corner
+ * radius anywhere in the interface.
+ */
 @theme {
-  --color-canvas: #f4f6f7;
-  --color-surface: #ffffff;
-  --color-ink: #15232c;
-  --color-ink-soft: #4a585f;
-  --color-line: #ccd5da;
-  --color-brand: #0e6a70;
-  --color-brand-dark: #0a4f54;
-  --color-brand-soft: #e3f0f0;
-  /* Named "side-*", not "left"/"right": a --color-left token would make
-     Tailwind emit a .text-left colour utility that collides with the built-in
-     text-align one. */
-  --color-side-left: #2a5fa5;
-  --color-side-left-soft: #e5edf8;
-  --color-side-right: #a9620a;
-  --color-side-right-soft: #fbeedd;
-  --color-good: #0f6b53;
-  --color-warn: #96540a;
-  --color-alert: #a8261f;
-  /* Dark surfaces for the landing page. */
-  --color-night: #060f13;
-  --color-night-soft: #0d1f25;
-  --color-night-line: #23383f;
-  /* Accent for dark surfaces - the brand teal is too dark to read on night. */
-  --color-mint: #8ee6da;
+  /* Paper and ink */
+  --color-canvas: #fdf6e5;
+  --color-surface: #fffdf6;
+  --color-ink: #22321e;
+  --color-ink-soft: #55694c;
+  --color-line: #22321e;
 
-  /* Chart series colour: teal-green, chromatic enough to read as a mark rather
-     than as grey (validated against the chart surface). */
+  /* The scene */
+  --color-sky: #a4ddef;
+  --color-sky-deep: #6ec6e3;
+  --color-ridge-far: #8ed1c7;
+  --color-ridge-mid: #4ea79b;
+  --color-ridge-near: #2f7f75;
+  --color-meadow: #c8e56d;
+  --color-meadow-deep: #9cc93e;
+  --color-wood: #dc9a52;
+  --color-wood-deep: #a9642a;
+
+  /* Accent: the berry red used for headings and the main action */
+  --color-brand: #cf3b2a;
+  --color-brand-dark: #a12a1c;
+  --color-brand-soft: #ffe2d4;
+
+  /* Deep forest, for the dark bands */
+  --color-night: #1e3a32;
+  --color-night-soft: #2b5147;
+  --color-night-line: #47786a;
+  --color-mint: #cfe96a;
+
+  /* Sides. Never colour alone: left/right are always labelled too. */
+  --color-side-left: #2f6bb0;
+  --color-side-left-soft: #dbe8f7;
+  --color-side-right: #c2681f;
+  --color-side-right-soft: #fbe9d6;
+
+  --color-good: #2f7f4f;
+  --color-warn: #a4620f;
+  --color-alert: #b5301f;
   --color-chart: #0a8f7a;
+  /* Recessive grid: ink would shout over the data. */
+  --color-grid: #d5cdb6;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-sans:
+    'Segoe UI Variable Text', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue',
+    Arial, sans-serif;
+  /* Swapped out in one place if a display face is ever self-hosted. */
+  --font-display:
+    'Segoe UI Variable Display', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, Arial,
+    sans-serif;
 }
 
 html {
@@ -50,9 +71,8 @@ body {
   line-height: 1.55;
 }
 
-/* Visible keyboard focus everywhere. */
 :focus-visible {
-  outline: 3px solid var(--color-brand);
+  outline: 3px solid var(--color-ink);
   outline-offset: 3px;
 }
 
@@ -66,72 +86,107 @@ body {
 }
 
 @layer components {
-  /* Buttons are deliberately large: comfortable for unsteady hands.
-     Tailwind v4 can only @apply real utilities, so each variant repeats the
-     shared base through this selector list rather than @apply-ing `.btn`. */
+  /* Buttons are stickers: a flat block, a heavy ink outline and a hard shadow
+     that presses in when you push it. Large, for unsteady hands. */
   .btn,
   .btn-primary,
   .btn-secondary,
-  .btn-quiet {
-    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl px-8 text-xl
-           font-semibold transition-colors select-none;
+  .btn-quiet,
+  .btn-bright,
+  .btn-on-dark {
+    @apply inline-flex min-h-16 items-center justify-center gap-3 px-8 text-xl font-bold
+           transition-all select-none;
+  }
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-bright,
+  .btn-on-dark {
+    border: 3px solid var(--color-ink);
+    box-shadow: 5px 5px 0 0 var(--color-ink);
+  }
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-bright:hover,
+  .btn-on-dark:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0 0 var(--color-ink);
+  }
+  .btn:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-bright:active,
+  .btn-on-dark:active {
+    transform: translate(5px, 5px);
+    box-shadow: 0 0 0 0 var(--color-ink);
   }
   .btn-primary {
-    @apply bg-brand text-white hover:bg-brand-dark;
+    @apply bg-brand text-white;
   }
   .btn-secondary {
-    @apply border-2 border-line bg-surface text-ink hover:border-brand hover:text-brand-dark;
+    @apply bg-surface text-ink;
+  }
+  .btn-bright {
+    @apply bg-mint text-ink;
+  }
+  .btn-on-dark {
+    @apply bg-night-soft text-white;
+    border-color: var(--color-mint);
+    box-shadow: 5px 5px 0 0 var(--color-mint);
+  }
+  .btn-on-dark:hover {
+    box-shadow: 3px 3px 0 0 var(--color-mint);
+  }
+  .btn-on-dark:active {
+    box-shadow: 0 0 0 0 var(--color-mint);
   }
   .btn-quiet {
-    @apply min-h-12 px-5 text-lg font-medium text-ink-soft underline decoration-2
-           underline-offset-4 hover:text-brand-dark;
+    @apply min-h-12 px-3 text-lg font-bold text-ink underline decoration-[3px] underline-offset-4
+           hover:text-brand;
   }
   .btn:disabled,
   .btn-primary:disabled,
-  .btn-secondary:disabled {
+  .btn-secondary:disabled,
+  .btn-bright:disabled,
+  .btn-on-dark:disabled {
     @apply cursor-not-allowed opacity-45;
-  }
-  .btn-primary:disabled:hover {
-    @apply bg-brand;
-  }
-  .card {
-    @apply rounded-3xl border border-line bg-surface p-7 shadow-sm;
-  }
-  .screen {
-    @apply mx-auto w-full max-w-4xl px-5 py-8 sm:px-8;
-  }
-  .h1 {
-    @apply text-4xl font-bold tracking-tight text-ink sm:text-5xl;
-  }
-  .h2 {
-    @apply text-2xl font-bold text-ink sm:text-3xl;
-  }
-  .lead {
-    @apply text-xl leading-relaxed text-ink-soft;
+    transform: none;
   }
 
-  /* --- landing page --- */
-  .kicker {
-    @apply text-sm font-semibold tracking-[0.22em] uppercase sm:text-base;
+  /* A panel, not a card: square, outlined, and sitting on the page like a
+     sticker rather than floating above it. */
+  .card {
+    @apply border-[3px] border-line bg-surface p-7;
+    box-shadow: 5px 5px 0 0 var(--color-ink);
   }
-  .display {
-    @apply text-5xl leading-[0.98] font-bold tracking-[-0.02em] sm:text-7xl lg:text-8xl;
-  }
-  .display-sm {
-    @apply text-4xl leading-[1.04] font-bold tracking-[-0.015em] sm:text-5xl lg:text-6xl;
+  .screen {
+    @apply mx-auto w-full max-w-4xl px-5 py-10 sm:px-8;
   }
   .band {
     @apply mx-auto w-full max-w-6xl px-6 sm:px-10;
   }
-  /* The main call to action on a dark section: inverted, for maximum contrast. */
-  .btn-bright {
-    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-mint px-8
-           text-xl font-semibold text-night transition-colors select-none hover:bg-white;
+
+  .h1 {
+    font-family: var(--font-display);
+    @apply text-4xl font-extrabold tracking-[-0.02em] text-ink sm:text-5xl;
   }
-  /* A large button that reads on a dark background. */
-  .btn-on-dark {
-    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl border-2
-           border-white/45 px-8 text-xl font-semibold text-white transition-colors
-           select-none hover:border-white hover:bg-white/10;
+  .h2 {
+    font-family: var(--font-display);
+    @apply text-2xl font-extrabold tracking-[-0.015em] text-ink sm:text-3xl;
+  }
+  .lead {
+    @apply text-xl leading-relaxed text-ink-soft;
+  }
+  .kicker {
+    @apply text-sm font-extrabold tracking-[0.18em] uppercase sm:text-base;
+  }
+  .display {
+    font-family: var(--font-display);
+    @apply text-5xl leading-[0.95] font-extrabold tracking-[-0.03em] sm:text-7xl lg:text-8xl;
+  }
+  .display-sm {
+    font-family: var(--font-display);
+    @apply text-4xl leading-[1.02] font-extrabold tracking-[-0.025em] sm:text-5xl lg:text-6xl;
   }
 }

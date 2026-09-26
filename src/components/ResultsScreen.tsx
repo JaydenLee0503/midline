@@ -87,7 +87,7 @@ function ExerciseCard({ result }: { result: ExerciseResult }) {
       )}
 
       {result.synkinesis.length > 0 && (
-        <div className="mt-5 rounded-2xl border border-warn/40 bg-side-right-soft p-5">
+        <div className="mt-5 border border-warn/40 bg-side-right-soft p-5">
           <h4 className="text-xl font-bold">Worth noticing</h4>
           <ul className="mt-2 space-y-2 text-xl">
             {result.synkinesis.map((finding) => (
@@ -125,7 +125,7 @@ export default function ResultsScreen({
       </p>
 
       {/* The one moment of the session worth making a little ceremony of. */}
-      <section className="relative isolate mt-8 overflow-hidden rounded-3xl bg-night p-8 sm:p-10">
+      <section className="relative isolate mt-8 overflow-hidden bg-night p-8 sm:p-10">
         <div className="absolute inset-y-0 right-0 w-[55%] opacity-60">
           <LandmarkField variant="band" fit="slice" background={false} />
         </div>

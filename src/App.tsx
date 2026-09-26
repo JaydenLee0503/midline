@@ -4,12 +4,17 @@ import HomeScreen from './components/HomeScreen';
 import ResultsScreen from './components/ResultsScreen';
 import SessionFlow from './components/SessionFlow';
 import {
+  bestGameScore,
+  clearGameScores,
   clearSessions,
   deleteSession,
+  loadGameScores,
   loadSessions,
   loadSettings,
+  saveGameScore,
   saveSession,
   saveSettings,
+  type GameRecord,
   type Settings,
 } from './lib/storage';
 import type { SessionRecord } from './lib/types';
@@ -17,14 +22,26 @@ import type { SessionRecord } from './lib/types';
 // The history screen is the only thing that pulls in the charting library, so
 // it is split out of the first load.
 const HistoryScreen = lazy(() => import('./components/HistoryScreen'));
+// The game pulls in the pose model wrapper and its own engine; nobody who does
+// not open it should pay for that.
+const GameScreen = lazy(() => import('./components/GameScreen'));
 
-type Route = 'home' | 'session' | 'results' | 'history';
+function ScreenFallback({ label }: { label: string }) {
+  return (
+    <p className="screen text-xl" role="status">
+      {label}
+    </p>
+  );
+}
+
+type Route = 'home' | 'session' | 'results' | 'history' | 'game';
 
 export default function App() {
   const [route, setRoute] = useState<Route>('home');
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [sessions, setSessions] = useState<SessionRecord[]>(() => loadSessions());
   const [lastRecord, setLastRecord] = useState<SessionRecord | null>(null);
+  const [gameScores, setGameScores] = useState<GameRecord[]>(() => loadGameScores());
 
   useEffect(() => {
     saveSettings(settings);
@@ -41,6 +58,10 @@ export default function App() {
     return earlier[earlier.length - 1] ?? null;
   }, [sessions, lastRecord]);
 
+  const handleGameFinished = useCallback((record: GameRecord) => {
+    setGameScores(saveGameScore(record));
+  }, []);
+
   const handleComplete = useCallback((record: SessionRecord) => {
     setLastRecord(record);
     setSessions(saveSession(record));
@@ -51,7 +72,8 @@ export default function App() {
     <AppShell
       onHome={() => setRoute('home')}
       onHistory={() => setRoute('history')}
-      showNav={route !== 'session'}
+      onGame={() => setRoute('game')}
+      showNav={route !== 'session' && route !== 'game'}
       variant={route === 'home' ? 'landing' : 'default'}
     >
       {route === 'home' && (
@@ -59,6 +81,7 @@ export default function App() {
           sessions={sessions}
           onStart={() => setRoute('session')}
           onHistory={() => setRoute('history')}
+          onGame={() => setRoute('game')}
         />
       )}
 
@@ -80,21 +103,29 @@ export default function App() {
         />
       )}
 
+      {route === 'game' && (
+        <Suspense fallback={<ScreenFallback label="Loading the game..." />}>
+          <GameScreen
+            settings={settings}
+            onSettingsChange={setSettings}
+            best={bestGameScore(gameScores)}
+            onFinished={handleGameFinished}
+            onExit={() => setRoute('home')}
+          />
+        </Suspense>
+      )}
+
       {route === 'history' && (
-        <Suspense
-          fallback={
-            <p className="screen text-xl" role="status">
-              Loading your progress...
-            </p>
-          }
-        >
+        <Suspense fallback={<ScreenFallback label="Loading your progress..." />}>
           <HistoryScreen
             sessions={sessions}
             onBack={() => setRoute('home')}
             onStart={() => setRoute('session')}
             onClearAll={() => {
               clearSessions();
+              clearGameScores();
               setSessions([]);
+              setGameScores([]);
               setLastRecord(null);
             }}
             onDeleteSession={(id) => {

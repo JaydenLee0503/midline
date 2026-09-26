@@ -20,9 +20,28 @@ import { get } from 'node:https';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const force = process.argv.includes('--force');
 
-const MODEL_URL =
-  'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
-const MODEL_DEST = join(root, 'public', 'models', 'face_landmarker.task');
+const MODELS = [
+  {
+    label: 'face landmark model',
+    url: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+    dest: join(root, 'public', 'models', 'face_landmarker.task'),
+    size: '3.8 MB',
+  },
+  {
+    // Used by the punching game to track both arms.
+    label: 'pose model',
+    url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+    dest: join(root, 'public', 'models', 'pose_landmarker_lite.task'),
+    size: '5.8 MB',
+  },
+  {
+    // Gives the game all 21 joints per hand, for a precise strike point.
+    label: 'hand model',
+    url: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+    dest: join(root, 'public', 'models', 'hand_landmarker.task'),
+    size: '7.8 MB',
+  },
+];
 const WASM_SRC = join(root, 'node_modules', '@mediapipe', 'tasks-vision', 'wasm');
 const WASM_DEST = join(root, 'public', 'mediapipe', 'wasm');
 
@@ -60,24 +79,24 @@ function download(url, dest, redirects = 0) {
   });
 }
 
-async function fetchModel() {
-  const existing = await sizeOf(MODEL_DEST);
+async function fetchModel(model) {
+  const name = model.dest.split(/[\\/]/).pop();
+  const existing = await sizeOf(model.dest);
   if (!force && existing >= MIN_MODEL_BYTES) {
-    console.log(`[midline] model already present (${(existing / 1e6).toFixed(1)} MB)`);
-    return true;
+    console.log(`[midline] ${name} already present (${(existing / 1e6).toFixed(1)} MB)`);
+    return;
   }
-  await mkdir(dirname(MODEL_DEST), { recursive: true });
-  console.log('[midline] downloading face_landmarker.task (~3.8 MB) ...');
-  await download(MODEL_URL, MODEL_DEST);
-  const got = await sizeOf(`${MODEL_DEST}.part`);
+  await mkdir(dirname(model.dest), { recursive: true });
+  console.log(`[midline] downloading ${name} (~${model.size}) ...`);
+  await download(model.url, model.dest);
+  const got = await sizeOf(`${model.dest}.part`);
   if (got < MIN_MODEL_BYTES) {
-    await rm(`${MODEL_DEST}.part`, { force: true });
+    await rm(`${model.dest}.part`, { force: true });
     throw new Error(`downloaded file looks wrong (${got} bytes)`);
   }
-  await copyFile(`${MODEL_DEST}.part`, MODEL_DEST);
-  await rm(`${MODEL_DEST}.part`, { force: true });
-  console.log(`[midline] saved public/models/face_landmarker.task (${(got / 1e6).toFixed(1)} MB)`);
-  return true;
+  await copyFile(`${model.dest}.part`, model.dest);
+  await rm(`${model.dest}.part`, { force: true });
+  console.log(`[midline] saved public/models/${name} (${(got / 1e6).toFixed(1)} MB)`);
 }
 
 async function copyWasm() {
@@ -113,13 +132,15 @@ try {
   failed = true;
   console.warn(`[midline] could not copy wasm files: ${err.message}`);
 }
-try {
-  await fetchModel();
-} catch (err) {
-  failed = true;
-  console.warn(`\n[midline] !! could not download the face landmark model: ${err.message}`);
-  console.warn('[midline] !! run "npm run setup" once you have network access, or download');
-  console.warn(`[midline] !! ${MODEL_URL}`);
-  console.warn('[midline] !! manually to public/models/face_landmarker.task\n');
+for (const model of MODELS) {
+  try {
+    await fetchModel(model);
+  } catch (err) {
+    failed = true;
+    console.warn(`\n[midline] !! could not download the ${model.label}: ${err.message}`);
+    console.warn('[midline] !! run "npm run setup" once you have network access, or download');
+    console.warn(`[midline] !! ${model.url}`);
+    console.warn(`[midline] !! manually to ${model.dest}\n`);
+  }
 }
 if (!failed) console.log('[midline] setup complete - offline assets are in place.');

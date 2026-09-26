@@ -6,10 +6,12 @@
  * Every read is defensive. A corrupted or older entry is dropped rather than
  * allowed to break the History screen.
  */
+import { DEFAULT_OBJECT, type ObjectId } from './objects';
 import { DEFAULT_SIDE_CONFIG, type SessionRecord, type SideConfig } from './types';
 
 const SESSIONS_KEY = 'midline.sessions.v1';
 const SETTINGS_KEY = 'midline.settings.v1';
+const GAME_KEY = 'midline.game.v1';
 
 export const SCHEMA_VERSION = 1;
 /** Plenty for years of daily practice, and keeps localStorage small. */
@@ -18,12 +20,33 @@ export const MAX_SESSIONS = 500;
 export interface Settings {
   sideConfig: SideConfig;
   showDebug: boolean;
+  /** Game: register slower punches, for players who cannot move quickly. */
+  gameGentle: boolean;
+  gameMuted: boolean;
+  /** Game: which object to punch. */
+  gameObject: ObjectId;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   sideConfig: DEFAULT_SIDE_CONFIG,
   showDebug: false,
+  gameGentle: false,
+  gameMuted: false,
+  gameObject: DEFAULT_OBJECT,
 };
+
+/** One finished round of the punching game. */
+export interface GameRecord {
+  at: string;
+  score: number;
+  bestCombo: number;
+  punches: number;
+  hits: number;
+  destroyed: number;
+  missed: number;
+}
+
+export const MAX_GAME_RECORDS = 50;
 
 function readRaw(key: string): string | null {
   try {
@@ -42,6 +65,12 @@ function writeRaw(key: string, value: string): boolean {
     console.warn(`[midline] cannot write ${key} to localStorage`, error);
     return false;
   }
+}
+
+const OBJECT_IDS: readonly string[] = ['ball', 'bag', 'chair', 'crate', 'pillow'];
+
+function isObjectId(value: unknown): value is ObjectId {
+  return typeof value === 'string' && OBJECT_IDS.includes(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -109,6 +138,9 @@ export function loadSettings(): Settings {
     const side = isRecord(parsed.sideConfig) ? parsed.sideConfig : {};
     return {
       showDebug: parsed.showDebug === true,
+      gameGentle: parsed.gameGentle === true,
+      gameMuted: parsed.gameMuted === true,
+      gameObject: isObjectId(parsed.gameObject) ? parsed.gameObject : DEFAULT_OBJECT,
       sideConfig: {
         swapBlendshapes: side.swapBlendshapes === true,
         swapLandmarks: side.swapLandmarks === true,
@@ -121,6 +153,40 @@ export function loadSettings(): Settings {
 
 export function saveSettings(settings: Settings): void {
   writeRaw(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function looksLikeGameRecord(value: unknown): value is GameRecord {
+  return isRecord(value) && typeof value.at === 'string' && typeof value.score === 'number';
+}
+
+export function loadGameScores(): GameRecord[] {
+  const raw = readRaw(GAME_KEY);
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(looksLikeGameRecord);
+  } catch {
+    return [];
+  }
+}
+
+export function saveGameScore(record: GameRecord): GameRecord[] {
+  const scores = [...loadGameScores(), record].slice(-MAX_GAME_RECORDS);
+  writeRaw(GAME_KEY, JSON.stringify(scores));
+  return scores;
+}
+
+export function bestGameScore(scores: readonly GameRecord[] = loadGameScores()): number {
+  return scores.reduce((best, record) => Math.max(best, record.score), 0);
+}
+
+export function clearGameScores(): void {
+  try {
+    window.localStorage.removeItem(GAME_KEY);
+  } catch (error) {
+    console.warn('[midline] could not clear game scores', error);
+  }
 }
 
 export function newSessionId(): string {

@@ -14,10 +14,10 @@ export default function ProgressBar({ value, label, tone = 'brand' }: ProgressBa
       aria-valuemax={100}
       aria-valuenow={percent}
       aria-label={label}
-      className="h-6 w-full overflow-hidden rounded-full bg-canvas ring-2 ring-line"
+      className="h-6 w-full overflow-hidden bg-canvas ring-2 ring-line"
     >
       <div
-        className={`h-full rounded-full transition-[width] duration-100 ease-linear ${
+        className={`h-full transition-[width] duration-100 ease-linear ${
           tone === 'good' ? 'bg-good' : 'bg-brand'
         }`}
         style={{ width: `${percent}%` }}

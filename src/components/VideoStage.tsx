@@ -48,7 +48,7 @@ export default function VideoStage({
   return (
     <div className="mx-auto w-full">
       <div
-        className="relative w-full overflow-hidden rounded-3xl border-2 border-line bg-ink/90"
+        className="relative w-full overflow-hidden border-2 border-line bg-ink/90"
         style={{ aspectRatio: aspect }}
       >
         <div className="absolute inset-0 -scale-x-100">
@@ -70,10 +70,10 @@ export default function VideoStage({
 
         {showSideLabels && (
           <>
-            <span className="absolute top-3 left-3 rounded-xl bg-side-left px-3 py-1 text-base font-semibold text-white">
+            <span className="absolute top-3 left-3 bg-side-left px-3 py-1 text-base font-semibold text-white">
               Your left
             </span>
-            <span className="absolute top-3 right-3 rounded-xl bg-side-right px-3 py-1 text-base font-semibold text-white">
+            <span className="absolute top-3 right-3 bg-side-right px-3 py-1 text-base font-semibold text-white">
               Your right
             </span>
           </>

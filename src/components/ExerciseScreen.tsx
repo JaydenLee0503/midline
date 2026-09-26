@@ -47,7 +47,7 @@ export default function ExerciseScreen({
       </p>
       <h2 className="h2 mt-1">{exercise.name}</h2>
 
-      <div className={`mt-5 rounded-3xl border border-line p-6 ${PHASE_TONE[phase]}`}>
+      <div className={`mt-5 border border-line p-6 ${PHASE_TONE[phase]}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-lg font-semibold text-ink-soft" aria-live="polite">
@@ -69,7 +69,7 @@ export default function ExerciseScreen({
           <ul className="mt-5 space-y-2 text-xl">
             {exercise.how.map((step) => (
               <li key={step} className="flex items-baseline gap-3">
-                <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-brand" />
+                <span aria-hidden className="mt-2 size-2 shrink-0 bg-brand" />
                 <span>{step}</span>
               </li>
             ))}

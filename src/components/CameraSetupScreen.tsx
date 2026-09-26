@@ -30,7 +30,7 @@ function Check({ state, children }: { state: CheckState; children: React.ReactNo
     <li className="flex items-center gap-4 text-xl">
       <span
         aria-hidden
-        className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xl font-bold ${tone}`}
+        className={`flex size-9 shrink-0 items-center justify-center text-xl font-bold ${tone}`}
       >
         {mark}
       </span>

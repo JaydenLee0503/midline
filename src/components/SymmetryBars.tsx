@@ -30,7 +30,7 @@ export default function SymmetryBars({ fill, threshold, label }: SymmetryBarsPro
       </div>
 
       <div
-        className="flex h-14 w-full items-stretch overflow-hidden rounded-2xl bg-canvas ring-2 ring-line"
+        className="flex h-14 w-full items-stretch overflow-hidden bg-canvas ring-2 ring-line"
         role="img"
         aria-label={`Left side movement ${left} percent, right side movement ${right} percent`}
       >
@@ -43,7 +43,7 @@ export default function SymmetryBars({ fill, threshold, label }: SymmetryBarsPro
             />
           )}
           <div
-            className="h-full rounded-l-xl bg-side-left transition-[width] duration-100 ease-out"
+            className="h-full bg-side-left transition-[width] duration-100 ease-out"
             style={{ width: `${left}%` }}
           />
         </div>
@@ -59,7 +59,7 @@ export default function SymmetryBars({ fill, threshold, label }: SymmetryBarsPro
             />
           )}
           <div
-            className="h-full rounded-r-xl bg-side-right transition-[width] duration-100 ease-out"
+            className="h-full bg-side-right transition-[width] duration-100 ease-out"
             style={{ width: `${right}%` }}
           />
         </div>

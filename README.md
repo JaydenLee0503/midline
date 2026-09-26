@@ -48,7 +48,9 @@ Then open **http://localhost:5173**.
 
 1. copies the MediaPipe WASM runtime out of `node_modules/@mediapipe/tasks-vision/wasm`
    into `public/mediapipe/wasm/` (~35 MB, no network needed), and
-2. downloads `face_landmarker.task` (3.8 MB) into `public/models/`.
+2. downloads three models into `public/models/`: `face_landmarker.task` (3.8 MB)
+   for the exercises, and `pose_landmarker_lite.task` (5.8 MB) plus
+   `hand_landmarker.task` (7.8 MB) for the game.
 
 Both are gitignored. The script is idempotent and never fails the install - if
 the download did not work (offline, proxy, firewall) it prints a warning, the app
@@ -59,11 +61,16 @@ npm run setup            # retry
 npm run setup -- --force # re-download even if a file is already there
 ```
 
-To do step 2 by hand, save this file to `public/models/face_landmarker.task`:
+To do step 2 by hand, save these into `public/models/`, keeping the file names:
 
 ```
 https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
 ```
+
+The game is code split, so its two models are only fetched by the browser when
+somebody actually opens it.
 
 ## Checking left and right
 
@@ -156,6 +163,75 @@ change.
 Add an entry to `EXERCISES` in `src/lib/exercises.ts`. The session engine,
 screens, results and history all read the list; nothing else needs editing.
 
+## The stress reliever game
+
+A separate mode, reachable from the landing page and the header. Targets appear
+for one minute and you punch them; straights, hooks and uppercuts each knock the
+shape about differently. It is not an exercise, it never appears inside a rehab
+session, and nothing it records touches the session scores.
+
+**Tracking uses two models together.** The pose model gives the body frame -
+shoulders for scale, elbows for telling an uppercut from a hook - and the hand
+model gives all 21 joints of each hand. The strike point is the **knuckle
+centroid**, not the pose model's single wrist dot: it is steadier, and it is
+where a punch actually lands. The full hand skeleton is drawn on screen, so you
+can see at a glance that tracking is working.
+
+The two run at different rates. Hands are re-read on every analysed frame
+because fists move fast and that is where precision matters; the pose runs on
+every third, because the body frame barely changes in 60ms. Hands also drop out
+during fast motion, so the pose wrist is always there as a fallback, and the HUD
+says which is in use. Hands are matched to arms by **which wrist each is nearest**,
+never by the model's own left/right naming, which is reported as though you were
+looking in a mirror.
+
+Two more things make detection work (`src/lib/punch.ts`, pure and unit tested):
+
+- Speed is measured in **shoulder widths per second**, so it does not matter how
+  far from the camera you sit.
+- A jab thrown straight at the camera barely moves on screen, so the detector
+  also watches how fast the arm is *extending*. A punch fires on whichever
+  signal crosses first, and the type is read from which component dominates -
+  upward travel with a bent elbow is an uppercut, sideways is a hook, extension
+  is a straight.
+
+A punch fires the moment the threshold is crossed rather than at the peak, so
+the game feels responsive, and hit testing uses the fist's whole **swept path**
+between frames - otherwise a fast punch tunnels straight through a target.
+
+**Choose what to hit.** Stress ball, punching bag, chair, crate or pillow
+(`src/lib/objects.ts`). Each is a closed outline that gets resampled into an
+even ring of vertices, so adding another is a matter of drawing its silhouette.
+Hits are tested against that **actual outline**, deformations included - the
+polygon drawn on screen is the polygon you can hit, so the gap between a chair's
+legs really is a gap.
+
+**Everything behaves like clay** (`src/lib/targets.ts`). Each vertex carries two
+displacements: an elastic one that springs back and makes a fresh hit ripple,
+and a plastic one that does not. A fraction of every dent stays, so an object
+slowly keeps the shape you beat into it, with a bulge pushed out the far side as
+though the material had nowhere else to go. How much stays is per object: a
+pillow takes a deep set, a chair barely gives. On top of that the body takes
+knockback, spin and a squash along the line of the punch, so uppercuts loft with
+backspin, hooks spin sideways and straights drive away and flatten.
+
+**The sound** (`src/lib/audio.ts`) is synthesised with the Web Audio API - there
+are no audio files to download. Each impact is three layers: a bright transient
+for the slap, a low sine whose pitch drops fast for the thud, and a band of
+noise for the crunch, with small random detunes so repeated hits do not sound
+looped. Each object has its own timbre, so a pillow is a dull thump and a crate
+is a woody crack.
+
+**Scoring** rewards variety and accuracy rather than force: uppercuts and hooks
+are worth more than straights, centre hits are worth half as much again, and the
+multiplier grows every third hit. Power contributes, but a gentle punch that
+lands still scores. Wild swings at nothing never break a streak - only letting a
+target time out does.
+
+**Playing it comfortably.** It works seated, one arm is enough, and *Gentle mode*
+roughly halves the speed a punch needs before it registers. Sound can be turned
+off. Nothing flashes; the "running out of time" cue is a slow pulse.
+
 ## Project structure
 
 ```
@@ -167,9 +243,18 @@ src/lib/sessionController.ts calibration, reps, results (tested)
 src/lib/storage.ts           localStorage, defensively parsed
 src/lib/history.ts           shaping sessions for the chart (pure, tested)
 src/lib/overlay.ts           canvas landmark + midline drawing
+src/lib/punch.ts             hand/pose punch detection + scoring (pure, tested)
+src/lib/objects.ts           the punchable objects, as outlines (tested)
+src/lib/targets.ts           clay deformation + outline collision (tested)
+src/lib/gameController.ts    the round: spawning, hits, effects (tested)
+src/lib/gameRender.ts        canvas drawing for the game
+src/lib/audio.ts             synthesised sound effects
 src/hooks/useCamera.ts       getUserMedia and its failure modes
 src/hooks/useFaceLandmarker.ts  loads the model once
 src/hooks/useDetectionLoop.ts   the requestAnimationFrame loop
+src/hooks/usePoseLandmarker.ts  loads the pose model (game only)
+src/hooks/useHandLandmarker.ts  loads the hand model (game only)
+src/hooks/useGameLoop.ts        the game's animation loop
 src/components/              one component per screen
 ```
 
@@ -193,25 +278,37 @@ detection runs at video rate while React renders at ~10 Hz.
 ## Design notes
 
 Users may be older adults or stroke survivors, so: 18px base type, large hit
-targets, high contrast, a calm palette, and nothing that flashes. The wording
-never asks anyone to try harder or go faster - rehab values slow, controlled
-movement, so the app asks for that and nothing more. Colour is never the only
-signal: left/right are labelled as well as coloured, and scores are always
-accompanied by a sentence.
+targets, high contrast, and nothing that flashes. The wording never asks anyone
+to try harder or go faster - rehab values slow, controlled movement, so the app
+asks for that and nothing more. Colour is never the only signal: left/right are
+labelled as well as coloured, and scores always come with a sentence.
 
-**The landing page** is full-bleed and deliberately sparse: one image, a short
-headline, one obvious action per screenful. The artwork
-(`src/components/art/LandmarkField.tsx`) is generated SVG, not a photograph - it
-keeps the "nothing is requested from anywhere else" promise, stays crisp at any
-size, and its subject is the thing the app actually does: a landmark mesh
-mirrored about a glowing midline, blue on the user's left and amber on their
-right, which is the same colour language the exercise and results screens use.
-The same mesh reappears behind the overall score, the one moment in a session
-worth a little ceremony.
+**The look is flat, illustrated and square.** Painted outdoor bands - sky,
+ridges, meadow, timber, forest - meet along drawn edges rather than ruled lines,
+with content sitting straight on the scenery instead of inside cards. Buttons
+and panels are stickers: a flat block, a heavy ink outline, and a hard offset
+shadow that presses in when pushed.
 
-Two things the sparse treatment does **not** drop: the "not a medical device"
-note and the privacy note. They are trimmed to two lines each and still sit on
-the landing page.
+**There is no corner radius anywhere in the interface.** Not on buttons, panels,
+inputs, bars or the video frame. `border-radius: 0` from the reset is the only
+radius rule in the built stylesheet, and that is worth keeping an eye on: this
+is Tailwind, so even the word "rounded" sitting in a *comment* is enough for it
+to emit a `.rounded` utility into the bundle.
+
+**The scenery is generated SVG** (`src/components/art/Scene.tsx`), not artwork
+files - clouds are grouped circles, ridges and grass are deterministic jitter
+(a small hash, never `Math.random`, so hills never change between renders). It
+keeps the "nothing is requested from anywhere else" promise and stays crisp at
+any size. The landmark mesh from the hero is the app's own subject matter, drawn
+in ink on the pale sky and in pale lines on the dark bands.
+
+**On the typeface.** The reference site uses Satoshi and Castledown, both
+third-party faces. Loading either from a CDN would break the promise that the
+app requests nothing from anywhere else, and shipping them is a licensing call
+that is not mine to make, so the display and body faces are a system stack
+behind two tokens, `--font-display` and `--font-sans`. Self-hosting a face means
+dropping the files into `public/fonts/` and changing those two lines - it is the
+one part of the reference look that is not reproduced here.
 
 The working screens stay plain on purpose. Nothing competes with the exercise
 cue while somebody is mid-repetition.

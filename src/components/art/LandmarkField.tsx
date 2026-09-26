@@ -82,9 +82,12 @@ const LEFT = buildHalf(true);
 const RIGHT = buildHalf(false);
 
 export type FieldVariant = 'hero' | 'band';
+/** 'night' is pale lines on a dark band; 'sky' is ink lines on a pale one. */
+export type FieldTheme = 'night' | 'sky';
 
 export interface LandmarkFieldProps {
   variant?: FieldVariant;
+  theme?: FieldTheme;
   /** 'meet' shows the whole face; 'slice' crops it to fill the box. */
   fit?: 'meet' | 'slice';
   /** Off when the section already paints its own background. */
@@ -96,13 +99,34 @@ export interface LandmarkFieldProps {
  * Sits behind content as a full-bleed background. Decorative only, so it is
  * hidden from assistive technology.
  */
+const THEMES = {
+  night: {
+    leftLine: '#7aa9e8',
+    leftDot: '#8fb8f0',
+    rightLine: '#e0a45c',
+    rightDot: '#eab473',
+    lineOpacity: 0.4,
+    dotOpacity: 0.92,
+  },
+  sky: {
+    leftLine: '#2f6bb0',
+    leftDot: '#2f6bb0',
+    rightLine: '#a9642a',
+    rightDot: '#c2681f',
+    lineOpacity: 0.5,
+    dotOpacity: 0.95,
+  },
+} as const;
+
 export default function LandmarkField({
   variant = 'hero',
+  theme = 'night',
   fit = 'slice',
   background = true,
   className = '',
 }: LandmarkFieldProps) {
-  const id = variant;
+  const id = `${variant}-${theme}`;
+  const tone = THEMES[theme];
   const meshOpacity = variant === 'hero' ? 1 : 0.6;
 
   return (
@@ -120,10 +144,10 @@ export default function LandmarkField({
           <stop offset="100%" stopColor="#060f13" stopOpacity="1" />
         </radialGradient>
         <linearGradient id={`${id}-midline`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7fd9d0" stopOpacity="0" />
-          <stop offset="28%" stopColor="#9ff0e4" stopOpacity="0.85" />
-          <stop offset="72%" stopColor="#9ff0e4" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#7fd9d0" stopOpacity="0" />
+          <stop offset="0%" stopColor={theme === 'sky' ? '#ffffff' : '#7fd9d0'} stopOpacity="0" />
+          <stop offset="28%" stopColor={theme === 'sky' ? '#ffffff' : '#9ff0e4'} stopOpacity="0.9" />
+          <stop offset="72%" stopColor={theme === 'sky' ? '#ffffff' : '#9ff0e4'} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={theme === 'sky' ? '#ffffff' : '#7fd9d0'} stopOpacity="0" />
         </linearGradient>
         <filter id={`${id}-soft`} x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="14" />
@@ -146,25 +170,25 @@ export default function LandmarkField({
 
       <g opacity={meshOpacity}>
         {/* Left of the picture is the user's left, matching the mirrored video. */}
-        <g stroke="#7aa9e8" fill="none" strokeWidth="1.1" opacity="0.4" strokeLinecap="round">
+        <g stroke={tone.leftLine} fill="none" strokeWidth="1.4" opacity={tone.lineOpacity} strokeLinecap="round">
           {LEFT.paths.map((d) => (
             <path key={d} d={d} />
           ))}
         </g>
-        <g fill="#8fb8f0">
+        <g fill={tone.leftDot}>
           {LEFT.dots.map(({ point, radius }) => (
-            <circle key={`${point[0]}-${point[1]}`} cx={point[0]} cy={point[1]} r={radius} opacity="0.92" />
+            <circle key={`${point[0]}-${point[1]}`} cx={point[0]} cy={point[1]} r={radius} opacity={tone.dotOpacity} />
           ))}
         </g>
 
-        <g stroke="#e0a45c" fill="none" strokeWidth="1.1" opacity="0.4" strokeLinecap="round">
+        <g stroke={tone.rightLine} fill="none" strokeWidth="1.4" opacity={tone.lineOpacity} strokeLinecap="round">
           {RIGHT.paths.map((d) => (
             <path key={d} d={d} />
           ))}
         </g>
-        <g fill="#eab473">
+        <g fill={tone.rightDot}>
           {RIGHT.dots.map(({ point, radius }) => (
-            <circle key={`${point[0]}-${point[1]}`} cx={point[0]} cy={point[1]} r={radius} opacity="0.92" />
+            <circle key={`${point[0]}-${point[1]}`} cx={point[0]} cy={point[1]} r={radius} opacity={tone.dotOpacity} />
           ))}
         </g>
       </g>

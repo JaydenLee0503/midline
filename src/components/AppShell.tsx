@@ -4,6 +4,7 @@ export interface AppShellProps {
   children: ReactNode;
   onHome?: () => void;
   onHistory?: () => void;
+  onGame?: () => void;
   /** Hidden while a session is running so nothing competes with the exercise. */
   showNav?: boolean;
   /** The landing page carries its own artwork, header treatment and footer. */
@@ -14,10 +15,12 @@ export default function AppShell({
   children,
   onHome,
   onHistory,
+  onGame,
   showNav = true,
   variant = 'default',
 }: AppShellProps) {
   const landing = variant === 'landing';
+  const navClass = 'btn-quiet';
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -36,30 +39,24 @@ export default function AppShell({
           <button
             type="button"
             onClick={onHome}
-            className={`flex items-center gap-3 text-2xl font-bold tracking-tight ${
-              landing ? 'text-white' : ''
-            }`}
+            className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-ink"
           >
-            <span
-              aria-hidden
-              className={`inline-block h-7 w-1.5 rounded-full ${
-                landing ? 'bg-brand-soft' : 'bg-brand'
-              }`}
-            />
+            <span aria-hidden className="inline-block h-7 w-2 bg-brand" />
             Midline
           </button>
-          {showNav && onHistory && (
-            <button
-              type="button"
-              className={
-                landing
-                  ? 'min-h-12 px-3 text-lg font-semibold text-white/80 underline decoration-2 underline-offset-4 transition-colors hover:text-white'
-                  : 'btn-quiet'
-              }
-              onClick={onHistory}
-            >
-              History
-            </button>
+          {showNav && (
+            <nav className="flex items-center gap-2 sm:gap-4">
+              {onGame && (
+                <button type="button" className={navClass} onClick={onGame}>
+                  Game
+                </button>
+              )}
+              {onHistory && (
+                <button type="button" className={navClass} onClick={onHistory}>
+                  History
+                </button>
+              )}
+            </nav>
           )}
         </div>
       </header>
