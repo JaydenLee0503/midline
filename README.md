@@ -31,6 +31,9 @@ Then open **http://localhost:5173**.
   page needs a secure connection".
 - Windows' camera privacy settings apply: *Settings → Privacy & security → Camera*
   must allow desktop apps to use the camera, or the browser never gets a stream.
+- File watching on the 9p mount is unreliable, so Vite is configured to poll.
+  It still occasionally misses a change - if an edit does not show up, restart
+  the dev server rather than hunting for a bug in the code.
 - The repo lives on a Windows drive mounted over 9p, which cannot create
   symlinks, so `npm install` fails on `node_modules/.bin`. `.npmrc` sets
   `bin-links=false` and the npm scripts call each tool by its real path
@@ -195,6 +198,23 @@ never asks anyone to try harder or go faster - rehab values slow, controlled
 movement, so the app asks for that and nothing more. Colour is never the only
 signal: left/right are labelled as well as coloured, and scores are always
 accompanied by a sentence.
+
+**The landing page** is full-bleed and deliberately sparse: one image, a short
+headline, one obvious action per screenful. The artwork
+(`src/components/art/LandmarkField.tsx`) is generated SVG, not a photograph - it
+keeps the "nothing is requested from anywhere else" promise, stays crisp at any
+size, and its subject is the thing the app actually does: a landmark mesh
+mirrored about a glowing midline, blue on the user's left and amber on their
+right, which is the same colour language the exercise and results screens use.
+The same mesh reappears behind the overall score, the one moment in a session
+worth a little ceremony.
+
+Two things the sparse treatment does **not** drop: the "not a medical device"
+note and the privacy note. They are trimmed to two lines each and still sit on
+the landing page.
+
+The working screens stay plain on purpose. Nothing competes with the exercise
+cue while somebody is mid-repetition.
 
 ## Not in this version
 

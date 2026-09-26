@@ -22,6 +22,13 @@
   --color-good: #0f6b53;
   --color-warn: #96540a;
   --color-alert: #a8261f;
+  /* Dark surfaces for the landing page. */
+  --color-night: #060f13;
+  --color-night-soft: #0d1f25;
+  --color-night-line: #23383f;
+  /* Accent for dark surfaces - the brand teal is too dark to read on night. */
+  --color-mint: #8ee6da;
+
   /* Chart series colour: teal-green, chromatic enough to read as a mark rather
      than as grey (validated against the chart surface). */
   --color-chart: #0a8f7a;
@@ -101,5 +108,30 @@ body {
   }
   .lead {
     @apply text-xl leading-relaxed text-ink-soft;
+  }
+
+  /* --- landing page --- */
+  .kicker {
+    @apply text-sm font-semibold tracking-[0.22em] uppercase sm:text-base;
+  }
+  .display {
+    @apply text-5xl leading-[0.98] font-bold tracking-[-0.02em] sm:text-7xl lg:text-8xl;
+  }
+  .display-sm {
+    @apply text-4xl leading-[1.04] font-bold tracking-[-0.015em] sm:text-5xl lg:text-6xl;
+  }
+  .band {
+    @apply mx-auto w-full max-w-6xl px-6 sm:px-10;
+  }
+  /* The main call to action on a dark section: inverted, for maximum contrast. */
+  .btn-bright {
+    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-mint px-8
+           text-xl font-semibold text-night transition-colors select-none hover:bg-white;
+  }
+  /* A large button that reads on a dark background. */
+  .btn-on-dark {
+    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl border-2
+           border-white/45 px-8 text-xl font-semibold text-white transition-colors
+           select-none hover:border-white hover:bg-white/10;
   }
 }

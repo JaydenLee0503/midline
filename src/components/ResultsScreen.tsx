@@ -6,6 +6,7 @@ import { EXERCISES_BY_ID } from '../lib/exercises';
 import { formatSessionDate } from '../lib/history';
 import { scoreBand } from '../lib/metrics';
 import type { ExerciseResult, SessionRecord, Side } from '../lib/types';
+import LandmarkField from './art/LandmarkField';
 import SymmetryBars from './SymmetryBars';
 
 export interface ResultsScreenProps {
@@ -123,34 +124,42 @@ export default function ResultsScreen({
         {formatSessionDate(record.startedAt)}.
       </p>
 
-      <section className="card mt-8 border-brand/40 bg-brand-soft">
-        <p className="text-xl font-semibold text-ink-soft">Overall symmetry</p>
-        <p className="mt-1 text-6xl font-bold tabular-nums">
-          {record.overallScore === null ? (
-            <span className="text-3xl">Not enough movement to score</span>
-          ) : (
-            <>
-              {record.overallScore}
-              <span className="text-2xl font-semibold text-ink-soft"> / 100</span>
-            </>
-          )}
-        </p>
-        {previousScore !== null && (
-          <p className="mt-3 text-xl">
-            Last session: {previousScore}
-            {change !== null && change !== 0 && (
+      {/* The one moment of the session worth making a little ceremony of. */}
+      <section className="relative isolate mt-8 overflow-hidden rounded-3xl bg-night p-8 sm:p-10">
+        <div className="absolute inset-y-0 right-0 w-[55%] opacity-60">
+          <LandmarkField variant="band" fit="slice" background={false} />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-night via-night/85 to-night/45" />
+
+        <div className="relative">
+          <p className="kicker text-mint">Overall symmetry</p>
+          <p className="mt-3 text-7xl leading-none font-bold tabular-nums text-white">
+            {record.overallScore === null ? (
+              <span className="text-3xl leading-snug">Not enough movement to score</span>
+            ) : (
               <>
-                {' '}
-                ({change > 0 ? 'up' : 'down'} {Math.abs(change)})
+                {record.overallScore}
+                <span className="text-2xl font-semibold text-white/50"> / 100</span>
               </>
             )}
           </p>
-        )}
-        <p className="mt-4 text-lg text-ink-soft">
-          100 means both sides moved by the same amount. The score describes how evenly your face
-          moved - not how big or how strong the movement was. Single sessions vary, so the trend over
-          weeks matters more than today&rsquo;s number.
-        </p>
+          {previousScore !== null && (
+            <p className="mt-4 text-xl text-white/80">
+              Last session: {previousScore}
+              {change !== null && change !== 0 && (
+                <>
+                  {' '}
+                  ({change > 0 ? 'up' : 'down'} {Math.abs(change)})
+                </>
+              )}
+            </p>
+          )}
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/55">
+            100 means both sides moved by the same amount. The score describes how evenly your face
+            moved - not how big or how strong the movement was. Single sessions vary, so the trend
+            over weeks matters more than today&rsquo;s number.
+          </p>
+        </div>
       </section>
 
       <div className="mt-6 grid gap-6">

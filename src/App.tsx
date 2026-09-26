@@ -52,6 +52,7 @@ export default function App() {
       onHome={() => setRoute('home')}
       onHistory={() => setRoute('history')}
       showNav={route !== 'session'}
+      variant={route === 'home' ? 'landing' : 'default'}
     >
       {route === 'home' && (
         <HomeScreen
