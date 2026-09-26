@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Fetched by `npm run setup` - not checked in (12 MB of wasm + a 3.8 MB model)
+public/models/
+public/mediapipe/
+tsconfig.tsbuildinfo

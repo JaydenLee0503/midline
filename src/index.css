@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+
+/* Calm, high-contrast palette. Left/right use blue vs amber, which stays
+   distinguishable for the common forms of colour blindness; status colours are
+   always paired with words, never used on their own. */
+@theme {
+  --color-canvas: #f4f6f7;
+  --color-surface: #ffffff;
+  --color-ink: #15232c;
+  --color-ink-soft: #4a585f;
+  --color-line: #ccd5da;
+  --color-brand: #0e6a70;
+  --color-brand-dark: #0a4f54;
+  --color-brand-soft: #e3f0f0;
+  /* Named "side-*", not "left"/"right": a --color-left token would make
+     Tailwind emit a .text-left colour utility that collides with the built-in
+     text-align one. */
+  --color-side-left: #2a5fa5;
+  --color-side-left-soft: #e5edf8;
+  --color-side-right: #a9620a;
+  --color-side-right-soft: #fbeedd;
+  --color-good: #0f6b53;
+  --color-warn: #96540a;
+  --color-alert: #a8261f;
+  /* Chart series colour: teal-green, chromatic enough to read as a mark rather
+     than as grey (validated against the chart surface). */
+  --color-chart: #0a8f7a;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+html {
+  /* Larger base size throughout - most users of this tool are older adults. */
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  /* Buttons are deliberately large: comfortable for unsteady hands.
+     Tailwind v4 can only @apply real utilities, so each variant repeats the
+     shared base through this selector list rather than @apply-ing `.btn`. */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-quiet {
+    @apply inline-flex min-h-16 items-center justify-center gap-3 rounded-2xl px-8 text-xl
+           font-semibold transition-colors select-none;
+  }
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+  .btn-secondary {
+    @apply border-2 border-line bg-surface text-ink hover:border-brand hover:text-brand-dark;
+  }
+  .btn-quiet {
+    @apply min-h-12 px-5 text-lg font-medium text-ink-soft underline decoration-2
+           underline-offset-4 hover:text-brand-dark;
+  }
+  .btn:disabled,
+  .btn-primary:disabled,
+  .btn-secondary:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+  .btn-primary:disabled:hover {
+    @apply bg-brand;
+  }
+  .card {
+    @apply rounded-3xl border border-line bg-surface p-7 shadow-sm;
+  }
+  .screen {
+    @apply mx-auto w-full max-w-4xl px-5 py-8 sm:px-8;
+  }
+  .h1 {
+    @apply text-4xl font-bold tracking-tight text-ink sm:text-5xl;
+  }
+  .h2 {
+    @apply text-2xl font-bold text-ink sm:text-3xl;
+  }
+  .lead {
+    @apply text-xl leading-relaxed text-ink-soft;
+  }
+}
